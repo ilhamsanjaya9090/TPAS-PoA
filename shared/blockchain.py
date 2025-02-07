@@ -12,8 +12,11 @@ class Blockchain:
         self.nodes = set()
         self.validators = {}  # Menyimpan validator dengan public key mereka
 
+        # Tambahkan validator "Genesis" terlebih dahulu sebelum membuat blok pertama
+        self.register_validator("Genesis", "Genesis_Public_Key")
+
         # Buat blok genesis
-        self.create_block(validator="Genesis", data={"message": "Genesis Block"}, previous_hash="0")
+        self.create_block(validator="Genesis", data={"message": "Genesis Block"})
 
     def register_validator(self, node_address, public_key):
         """Mendaftarkan validator baru ke jaringan."""
@@ -25,9 +28,10 @@ class Blockchain:
         if validator not in self.validators:
             raise ValueError("Validator tidak sah")
 
-        # Ambil hash blok terakhir
-        previous_hash = self.get_previous_block()["hash"]
-        
+        # Ambil hash dari blok sebelumnya, jika ada
+        previous_block = self.get_previous_block()
+        previous_hash = previous_block["hash"] if previous_block else "0"
+
         block = {
             "index": len(self.chain) + 1,
             "timestamp": time.time(),
@@ -40,11 +44,13 @@ class Blockchain:
         block_signature = self.sign_block(block, validator)
         block["signature"] = block_signature
 
+        # Tambahkan blok ke chain
         self.chain.append(block)
         return block
 
     def get_previous_block(self):
-        return self.chain[-1]
+        """Mengembalikan blok terakhir dalam chain atau None jika chain kosong."""
+        return self.chain[-1] if self.chain else None
 
     def sign_block(self, block, validator):
         """Validator menandatangani blok menggunakan ECDSA."""
