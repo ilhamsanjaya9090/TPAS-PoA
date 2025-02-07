@@ -1,0 +1,62 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+*.egg-info/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Flask cache and logs
+instance/
+*.log
+
+# Database files
+*.sqlite3
+*.db
+
+# Flask session and cache files
+cache/
+session/
+
+# Python package files
+*.egg
+*.manifest
+*.spec
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+*.env
+.env.*
+
+# Compiled files
+*.so
+*.o
+*.pyc
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Migrations (if using Flask-Migrate)
+migrations/
+
+# Node.js dependencies (if using frontend with Node)
+node_modules/
+npm-debug.log
+yarn-error.log

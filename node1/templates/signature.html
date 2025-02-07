@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Document</title>
+</head>
+<body>
+    <h1>Sign Document</h1>
+    <form action="/sign/incomplete" method="post">
+        <label for="fileHash">File Hash:</label>
+        <input type="text" id="fileHash" name="fileHash" required><br><br>
+
+        <button type="submit">Generate Incomplete Signature</button>
+    </form>
+
+    <form action="/sign/complete" method="post" style="margin-top: 20px;">
+        <label for="fileHash">File Hash:</label>
+        <input type="text" id="fileHash" name="fileHash" required><br><br>
+
+        <label for="witness">Witness:</label>
+        <input type="text" id="witness" name="witness" required><br><br>
+
+        <button type="submit">Complete Signature</button>
+    </form>
+</body>
+</html>

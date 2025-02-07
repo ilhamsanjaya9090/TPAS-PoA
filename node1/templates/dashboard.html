@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Display Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    
+    <!-- Container utama -->
+    <div class="container mt-5">
+        <!-- Informasi akun -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Account Information</h5>
+                <p class="card-text">
+                    <strong>Username:</strong> {{ user_info.username }}<br>
+                </p>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <h1 class="text-center">Dashboard</h1>
+        <div class="mt-4">
+            <table class="table table-bordered">
+                <thead class="table-primary">
+                    <tr>
+                        <th>#</th>
+                        <th>Filename</th>
+                        <th>Status</th>
+                        <th>Sender</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ doc.filename }}</td>
+                        <td>
+                            {{ doc.status }}<br>
+                            {% if doc.recipient %}
+                            Sent to: {{ doc.recipient }}
+                            {% endif %}
+                        </td>
+                        <td>{{ doc.sender if doc.sender else 'You' }}</td>
+                        <td>
+                            <!-- Download File -->
+                            <a href="{{ url_for('download_file', file_id=doc.file_id) }}" class="btn btn-success btn-sm">Download</a>
+
+                            <!-- Preview File -->
+                            <a href="{{ url_for('preview_file', file_id=doc.file_id) }}" class="btn btn-info btn-sm">Preview</a>
+
+                            <!-- Delete File -->
+                            <form action="{{ url_for('delete_file', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+
+                            <!-- Sign Document (Incomplete Signature) -->
+                            {% if doc.sender == session['user'] and doc.status == 'Uploaded' %}
+                            <form action="{{ url_for('create_incomplete_signature', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-warning btn-sm">Sign</button>
+                            </form>
+                            {% endif %}
+
+                            <!-- Complete Signature -->
+                            {% if doc.status == 'Incomplete Signature' and doc.username == user_info.username %}
+                            <form action="{{ url_for('complete_signature', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                <input type="text" name="witness" class="form-control form-control-sm d-inline-block w-50" placeholder="Enter Witness" required>
+                                <button type="submit" class="btn btn-info btn-sm">Complete Signature</button>
+                            </form>
+                            {% endif %}
+
+                            <!-- Send Document -->
+                            {% if doc.sender == session['user'] %}
+                            <form action="{{ url_for('send_document', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                <select name="recipient" class="form-select form-select-sm mt-2" required>
+                                    <option value="" disabled selected>Choose Recipient</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.username }}">{{ user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm mt-1">Send</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Upload and Logout -->
+        <a href="{{ url_for('upload_page') }}" class="btn btn-primary">Upload New Document</a>
+        <a href="{{ url_for('logout_page') }}" class="btn btn-danger">Logout</a>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
