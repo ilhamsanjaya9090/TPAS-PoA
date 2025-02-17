@@ -28,7 +28,7 @@
             <div class="card-body">
                 <h5 class="card-title">Account Information</h5>
                 <p class="card-text">
-                    <strong>Username:</strong> {{ user_info.username }}<br>
+                    <strong>Username:</strong> {{ user_info.username if user_info else 'Unknown' }}<br>
                 </p>
             </div>
         </div>
@@ -59,43 +59,59 @@
                         </td>
                         <td>{{ doc.sender if doc.sender else 'You' }}</td>
                         <td>
-                            <!-- Download File -->
-                            <a href="{{ url_for('download_file', file_id=doc.file_id) }}" class="btn btn-success btn-sm">Download</a>
+                            {% if doc.file_id %}
+                                <!-- Download File -->
+                                <a href="{{ url_for('download_file', file_id=doc.file_id) }}" class="btn btn-success btn-sm">Download</a>
+                        
+                                <!-- Preview File -->
+                                <a href="{{ url_for('preview_file', file_id=doc.file_id) }}" class="btn btn-info btn-sm">Preview</a>
+                        
+                                <!-- Delete File -->
+                                <form action="{{ url_for('delete_file', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            {% endif %}
 
-                            <!-- Preview File -->
-                            <a href="{{ url_for('preview_file', file_id=doc.file_id) }}" class="btn btn-info btn-sm">Preview</a>
-
-                            <!-- Delete File -->
-                            <form action="{{ url_for('delete_file', file_id=doc.file_id) }}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                            </form>
-
-                            <!-- Sign Document (Incomplete Signature) -->
-                            {% if doc.sender == session['user'] and doc.status == 'Uploaded' %}
+                            <!-- ✅ Tombol Sign Document (Incomplete Signature) -->
+                            {% if user_info.is_validator and doc.status == 'Uploaded' %}
                             <form action="{{ url_for('create_incomplete_signature', file_id=doc.file_id) }}" method="POST" class="d-inline">
                                 <button type="submit" class="btn btn-warning btn-sm">Sign</button>
                             </form>
                             {% endif %}
-
-                            <!-- Complete Signature -->
-                            {% if doc.status == 'Incomplete Signature' and doc.username == user_info.username %}
-                            <form action="{{ url_for('complete_signature', file_id=doc.file_id) }}" method="POST" class="d-inline">
-                                <input type="text" name="witness" class="form-control form-control-sm d-inline-block w-50" placeholder="Enter Witness" required>
-                                <button type="submit" class="btn btn-info btn-sm">Complete Signature</button>
-                            </form>
-                            {% endif %}
-
-                            <!-- Send Document -->
-                            {% if doc.sender == session['user'] %}
+                                                
+                            <!-- ✅ Tombol Send ke Validator (Ilham → Sanjaya) -->
+                            {% if doc.status == 'Incomplete Signature' and user_info.is_validator and session['user'] == 'ilham' %}
                             <form action="{{ url_for('send_document', file_id=doc.file_id) }}" method="POST" class="d-inline">
                                 <select name="recipient" class="form-select form-select-sm mt-2" required>
-                                    <option value="" disabled selected>Choose Recipient</option>
-                                    {% for user in users %}
-                                    <option value="{{ user.username }}">{{ user.username }}</option>
-                                    {% endfor %}
+                                    <option value="sanjaya">Sanjaya</option>
                                 </select>
                                 <button type="submit" class="btn btn-primary btn-sm mt-1">Send</button>
                             </form>
+                            {% endif %}
+                        
+                            <!-- ✅ Tombol Complete Signature (Hanya Sanjaya) -->
+                            {% if doc.status == 'Incomplete Signature' and user_info.username in (doc.shared_with or []) %}
+                            <form action="{{ url_for('complete_signature', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                <input type="text" name="witness" placeholder="Witness Name" class="form-control form-control-sm mb-1" required>
+                                <button type="submit" class="btn btn-secondary btn-sm">Complete Signature</button>
+                            </form>
+                            {% endif %}
+
+                            <!-- ✅ Tombol Send ke Non-Validator (Sanjaya → Node1) -->
+                            {% if doc.status == 'Complete Signature' and user_info.is_validator and session['user'] == 'sanjaya' %}
+                            <form action="{{ url_for('send_document', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                <select name="recipient" class="form-select form-select-sm mt-2" required>
+                                    <option value="node1">Node 1 (Non-Validator)</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm mt-1">Send to Node1</button>
+                            </form>
+                            {% endif %}
+
+                            <!-- ✅ Pratinjau QR Code -->
+                            {% if doc.status == 'Complete Signature' and doc.updated_file_id %}
+                            <br>
+                            <strong>QR Code:</strong>
+                            <img src="{{ url_for('preview_file', file_id=doc.updated_file_id) }}" alt="QR Code" width="100">
                             {% endif %}
                         </td>
                     </tr>
