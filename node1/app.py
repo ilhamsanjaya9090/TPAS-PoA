@@ -26,7 +26,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../shar
 from shared.blockchain import Blockchain
 app = Flask(__name__, template_folder='templates')
 app.secret_key = 'your_secret_key'
-client = MongoClient("mongodb://localhost:27017/")
+
+
+# Koneksi ke MongoDB
+MONGO_URL = "mongodb://192.168.160.1:27017/"
+client = MongoClient(MONGO_URL)
 db = client['blockchain_db']
 users_collection = db['users']
 documents_collection = db['documents']
@@ -591,6 +595,7 @@ def sync_chain():
 def get_chain():
     """Mengambil seluruh blockchain."""
     return jsonify({"chain": blockchain.chain}), 200
+<<<<<<< HEAD
 
 @app.route('/get_validators', methods=['GET'])
 def get_validators():
@@ -616,3 +621,9 @@ if __name__ == '__main__':
 
 
 
+=======
+    
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+>>>>>>> 83260b2 (Update local changes before pulling latest code)
