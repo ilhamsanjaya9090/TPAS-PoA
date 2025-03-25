@@ -18,18 +18,18 @@ from PIL import Image
 from io import BytesIO
 import json
 import sys
-import os
 import requests
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../shared')))
+from shared import tpas_crypto
 from shared.blockchain import Blockchain
+
 app = Flask(__name__, template_folder='templates')
 app.secret_key = 'your_secret_key'
 
-
-# Koneksi ke MongoDB
-MONGO_URL = "mongodb://192.168.160.1:27017/"
+# MongoDB config
+MONGO_URL = "mongodb://localhost:27017/"
 client = MongoClient(MONGO_URL)
 db = client['blockchain_db']
 users_collection = db['users']
@@ -37,32 +37,33 @@ documents_collection = db['documents']
 fs = gridfs.GridFS(db)
 
 blockchain = Blockchain()
-def load_validators_from_db():
-    """Muat kembali validator dari MongoDB ke Blockchain saat server Flask dimulai."""
-    validators = users_collection.find({"is_validator": True}, {"username": 1, "_id": 0})
-    for validator in validators:
-        blockchain.register_validator(validator['username'], "Public_Key_Placeholder")
-
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Panggil fungsi saat server mulai
-load_validators_from_db()
+def get_user_role(username):
+    user = users_collection.find_one({'username': username})
+    return user.get("role", "non-validator") if user else "non-validator"
 
+def load_validators_from_db():
+    validators = users_collection.find({"role": "validator"}, {"username": 1})
+    for v in validators:
+        blockchain.register_validator(v['username'], "Public_Key_Placeholder")
+
+load_validators_from_db()
 
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
     if request.method == 'POST':
-        data = request.form
-        username = data.get('username')
-        password = data.get('password')
-        confirm_password = data.get('confirm_password')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm = request.form.get('confirm_password')
+        role = request.form.get('role', 'non-validator')  # default jika tidak dipilih
 
         if not username or not password:
             flash('Username and password are required.', 'error')
             return redirect(url_for('register_page'))
 
-        if password != confirm_password:
+        if password != confirm:
             flash('Passwords do not match.', 'error')
             return redirect(url_for('register_page'))
 
@@ -71,7 +72,15 @@ def register_page():
             return redirect(url_for('register_page'))
 
         hashed_password = generate_password_hash(password)
-        users_collection.insert_one({"username": username, "password": hashed_password})
+        private_key, public_key = tpas_crypto.generate_keypair()
+        users_collection.insert_one({
+             "username": username,
+            "password": hashed_password,
+            "role": role,
+            "private_key": private_key.to_string().hex(),
+            "public_key": public_key.to_string().hex()
+        })
+
         flash('Registration successful. Please login.', 'success')
         return redirect(url_for('login_page'))
 
@@ -80,32 +89,24 @@ def register_page():
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
     if request.method == 'POST':
-        data = request.form
-        username = data.get('username')
-        password = data.get('password')
-
+        username = request.form.get('username')
+        password = request.form.get('password')
         user = users_collection.find_one({"username": username})
-
-        if user:
-            print(f"🛠️ DEBUG: User found: {user}")  # Menampilkan data user di terminal
 
         if not user or not check_password_hash(user['password'], password):
             flash('Invalid username or password.', 'error')
             return redirect(url_for('login_page'))
 
-        # Simpan user ke session tanpa admin
         session['user'] = username
-
-        flash('Welcome back!', 'success')
+        flash('Login successful.', 'success')
         return redirect(url_for('dashboard_page'))
 
     return render_template('login.html')
 
-
-@app.route('/logout', methods=['GET'])
-def logout_page():
+@app.route('/logout')
+def logout():
     session.pop('user', None)
-    flash('Logged out successfully.', 'success')
+    flash('Logged out.', 'success')
     return redirect(url_for('login_page'))
 
 @app.route('/dashboard', methods=['GET'])
@@ -115,275 +116,83 @@ def dashboard_page():
         return redirect(url_for('login_page'))
 
     current_user = session['user']
-    
-    # Ambil semua dokumen yang dimiliki atau dibagikan kepada user
+
     documents = list(documents_collection.find(
         {'$or': [{'username': current_user}, {'shared_with': {"$in": [current_user]}}]},
-        projection={'_id': 1, 'filename': 1, 'status': 1, 'shared_with': 1, 'file_id': 1}
+        projection={'_id': 1, 'filename': 1, 'status': 1, 'shared_with': 1, 'file_id': 1, 'username': 1}
     ))
-
 
     for doc in documents:
         if 'file_id' in doc:
-            doc['file_id'] = str(doc['file_id'])  # ✅ Konversi ObjectId ke string
-    
-    user_info = users_collection.find_one(
-        {'username': current_user},
-        {'_id': 0, 'username': 1, 'is_validator': 1}
-    )
+            doc['file_id'] = str(doc['file_id'])
+
+    user_info = users_collection.find_one({'username': current_user})
+    role = user_info.get('role', 'non-validator')  # default kalau tidak ada
+
+    # Untuk dropdown user
+    all_users = users_collection.find({"username": {"$ne": current_user}}, {"_id": 0, "username": 1})
+    user_list = [u["username"] for u in all_users]
 
     return render_template(
         'dashboard.html',
         documents=documents,
-        user_info=user_info
+        user=current_user,         # ⬅️ penting!
+        role=role,                 # ⬅️ penting!
+        user_list=user_list
     )
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_page():
     if 'user' not in session:
-        flash('Please login to upload files.', 'error')
+        flash('Please login first.', 'error')
         return redirect(url_for('login_page'))
 
-    # Cek apakah user adalah validator
-    user = users_collection.find_one({"username": session['user']})
-    if not user.get("is_validator", False):
-        flash('Only validators can upload files.', 'error')
+    username = session['user']
+    if get_user_role(username) != "validator":
+        flash('Only validators can upload documents.', 'error')
         return redirect(url_for('dashboard_page'))
 
     if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file uploaded.', 'error')
-            return redirect(url_for('upload_page'))
-
-        file = request.files['file']
-        if file.filename == '':
+        file = request.files.get('file')
+        if not file or file.filename == '':
             flash('No file selected.', 'error')
             return redirect(url_for('upload_page'))
 
         filename = secure_filename(file.filename)
-        file_content = file.read()
-        file_id = fs.put(file_content, filename=filename)  # ✅ Pastikan file masuk ke GridFS
-        file_hash = hashlib.sha256(file_content).hexdigest()
+        content = file.read()
+        file_hash = hashlib.sha256(content).hexdigest()
+        file_id = fs.put(content, filename=filename)
 
-        # Simpan metadata file ke database
-        result = documents_collection.insert_one({
-            'username': session['user'],
-            'sender': session['user'],
+        documents_collection.insert_one({
+            'username': username,
             'filename': filename,
             'file_hash': file_hash,
-            'file_id': file_id,  # ✅ Pastikan ini tersimpan
-            'status': 'Uploaded'
+            'file_id': file_id,
+            'status': 'Uploaded',
+            'shared_with': []
         })
 
-        if result.inserted_id:
-            flash('Document uploaded successfully.', 'success')
-        else:
-            flash('Error saving document to database.', 'error')
+        blockchain.create_block(
+            validator=username,
+            data={"action": "Upload", "filename": filename, "file_hash": file_hash},
+            block_type="Upload"
+        )
 
+        flash('Upload successful.', 'success')
         return redirect(url_for('dashboard_page'))
 
     return render_template('upload.html')
 
-@app.route('/create_incomplete_signature/<file_id>', methods=['POST'])
-def create_incomplete_signature(file_id):
-    if 'user' not in session:
-        flash('Unauthorized access.', 'error')
-        return redirect(url_for('login_page'))
-
-    current_user = session['user']
-    user_info = users_collection.find_one({'username': current_user})
-
-    if not user_info or not user_info.get('is_validator', False):
-        flash('Only validators can sign documents.', 'error')
-        return redirect(url_for('dashboard_page'))
-
-    try:
-        document = documents_collection.find_one({'file_id': ObjectId(file_id)})
-        if not document:
-            flash('Document not found.', 'error')
-            return redirect(url_for('dashboard_page'))
-
-        if document['status'] != 'Uploaded':
-            flash('Document must be in "Uploaded" status to sign.', 'error')
-            return redirect(url_for('dashboard_page'))
-
-        file = fs.get(ObjectId(file_id))
-        file_content = file.read()
-
-        # 🔑 Buat tanda tangan digital ECDSA
-        private_key = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
-        incomplete_signature = private_key.sign(file_content).hex()
-
-        # 📝 Simpan tanda tangan dalam database
-        documents_collection.update_one(
-            {'file_id': ObjectId(file_id)},
-            {'$set': {
-                'incomplete_signature': incomplete_signature,
-                'status': 'Incomplete Signature'
-            }}
-        )
-
-        # 🔗 Tambahkan ke Blockchain
-        blockchain.create_block(
-            validator=current_user,
-            data={
-                "action": "Create Incomplete Signature",
-                "username": session['user'],
-                "filename": document['filename'],
-                "file_hash": document['file_hash'],
-                "incomplete_signature": incomplete_signature,
-                "status": "Incomplete Signature"
-            },
-            previous_hash=blockchain.get_previous_block()['hash']
-        )
-
-        flash('Incomplete Signature created successfully.', 'success')
-        return redirect(url_for('dashboard_page'))
-    except Exception as e:
-        flash(f'Error creating incomplete signature: {e}', 'error')
-        return redirect(url_for('dashboard_page'))
-
-@app.route('/complete_signature/<file_id>', methods=['POST'])
-def complete_signature(file_id):
-    if 'user' not in session:
-        flash('Unauthorized access.', 'error')
-        return redirect(url_for('login_page'))
-
-    current_user = session['user']
-    user = users_collection.find_one({"username": current_user})
-
-    if not user.get("is_validator", False):
-        flash('Only validators can complete signatures.', 'error')
-        return redirect(url_for('dashboard_page'))
-
-    witness = request.form.get('witness')
-    if not witness:
-        flash('Witness is required to complete the signature.', 'error')
-        return redirect(url_for('dashboard_page'))
-
-    try:
-        document = documents_collection.find_one({'file_id': ObjectId(file_id)})
-        if not document:
-            flash('Document not found.', 'error')
-            return redirect(url_for('dashboard_page'))
-
-        if 'incomplete_signature' not in document:
-            flash('This document has no incomplete signature to complete.', 'error')
-            return redirect(url_for('dashboard_page'))
-
-        completed_signature = document['incomplete_signature'] + f"-witness-{witness}"
-
-        # 🔍 Ambil file PDF dari GridFS
-        file = fs.get(ObjectId(file_id))
-        pdf_content = file.read()
-
-        # 🔍 Buat QR Code dengan data blockchain
-        block_data = blockchain.get_previous_block()
-        qr_data = json.dumps({
-            "block_number": block_data['index'],
-            "block_hash": block_data['hash'],
-            "filename": document['filename'],
-            "file_hash": document['file_hash'],
-            "signature_status": "Signature Completed"
-        }, indent=4)
-
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(qr_data)
-        qr.make(fit=True)
-
-        # 🔍 Simpan QR Code ke dalam BytesIO
-        qr_code_buffer = BytesIO()
-        qr_image = qr.make_image(fill_color="black", back_color="white")
-        qr_image.save(qr_code_buffer, format="PNG")
-        qr_code_buffer.seek(0)
-
-        # 🔍 Tambahkan QR Code ke dalam halaman pertama PDF
-        pdf_reader = PdfReader(BytesIO(pdf_content))
-        pdf_writer = PdfWriter()
-
-        overlay_buffer = BytesIO()
-        can = canvas.Canvas(overlay_buffer, pagesize=letter)
-        qr_image_reader = ImageReader(qr_code_buffer)
-
-        # Atur posisi barcode pada halaman pertama
-        can.drawImage(qr_image_reader, 400, 50, width=150, height=150)
-        can.showPage()
-        can.save()
-
-        overlay_buffer.seek(0)
-        overlay_reader = PdfReader(overlay_buffer)
-
-        for index, page in enumerate(pdf_reader.pages):
-            if index == 0:  
-                page.merge_page(overlay_reader.pages[0])  # Gabungkan halaman QR dengan PDF asli
-
-            pdf_writer.add_page(page)
-
-        # 🔍 Simpan PDF yang telah diperbarui ke GridFS
-        updated_pdf_buffer = BytesIO()
-        pdf_writer.write(updated_pdf_buffer)
-        updated_pdf_buffer.seek(0)
-
-        updated_file_id = fs.put(updated_pdf_buffer.getvalue(), filename=f"{document['filename']}_signed.pdf")
-
-        # 🔍 Perbarui dokumen di MongoDB
-        documents_collection.update_one(
-            {'file_id': ObjectId(file_id)},
-            {'$set': {
-                'completed_signature': completed_signature,
-                'status': 'Complete Signature',
-                'updated_file_id': updated_file_id
-            }}
-        )
-
-        # 🔍 Tambahkan ke Blockchain
-        blockchain.create_block(
-            validator=current_user,
-            data={
-                "action": "Complete Signature",
-                "username": current_user,
-                "filename": document['filename'],
-                "file_hash": document['file_hash'],
-                "incomplete_signature": document['incomplete_signature'],
-                "completed_signature": completed_signature,
-                "barcode_file_id": str(updated_file_id),
-                "status": "Signature Completed"
-            },
-            block_type="Complete Signature"
-        )
-
-        print(f"✅ Signature Completed: {completed_signature}")
-        print(f"✅ Updated File ID: {updated_file_id}")
-
-        flash('Signature completed and barcode embedded into the PDF successfully.', 'success')
-        return redirect(url_for('dashboard_page'))
-
-    except Exception as e:
-        print(f"❌ Error completing signature: {e}")
-        flash(f'Error completing signature: {e}', 'error')
-        return redirect(url_for('dashboard_page'))
-
-
 @app.route('/send_document/<file_id>', methods=['POST'])
 def send_document(file_id):
     if 'user' not in session:
-        flash('Unauthorized access.', 'error')
         return redirect(url_for('login_page'))
 
+    sender = session['user']
     recipient = request.form.get('recipient')
     if not recipient:
-        flash('Recipient username is required.', 'error')
-        return redirect(url_for('dashboard_page'))
-
-    recipient_user = users_collection.find_one({'username': recipient})
-
-    if not recipient_user:
-        flash('Recipient not found.', 'error')
+        flash('Recipient is required.', 'error')
         return redirect(url_for('dashboard_page'))
 
     document = documents_collection.find_one({'file_id': ObjectId(file_id)})
@@ -391,194 +200,291 @@ def send_document(file_id):
         flash('Document not found.', 'error')
         return redirect(url_for('dashboard_page'))
 
-    sender = session['user']
-
-    # ✅ Jika dokumen masih "Incomplete Signature", hanya bisa dikirim ke Validator
-    if document['status'] == 'Incomplete Signature':
-        if not recipient_user.get('is_validator', False):
-            flash('Recipient must be a validator.', 'error')
-            return redirect(url_for('dashboard_page'))
-        new_status = "Incomplete Signature"  # Status tetap agar tombol "Complete Signature" muncul
-
-    # ✅ Jika dokumen sudah "Complete Signature", bisa dikirim ke Non-Validator
-    elif document['status'] == 'Complete Signature':
-        new_status = "Sent to Non-Validator"
-
-    else:
-        flash('Document cannot be sent.', 'error')
+    status = document['status']
+    if status in ['Uploaded', 'Incomplete Signature'] and get_user_role(recipient) != "validator":
+        flash('Can only send to validator at this stage.', 'error')
         return redirect(url_for('dashboard_page'))
 
-    # ✅ Perbarui shared_with agar penerima bisa melihat dokumen
+    new_status = "Incomplete Signature" if status == 'Incomplete Signature' else \
+                 "Sent to Non-Validator" if status == 'Complete Signature' else status
+
     documents_collection.update_one(
         {'file_id': ObjectId(file_id)},
-        {
-            '$addToSet': {'shared_with': recipient},  # Tambahkan penerima ke daftar shared_with
-            '$set': {'status': new_status}
-        }
+        {'$addToSet': {'shared_with': recipient}, '$set': {'status': new_status}}
     )
 
-    # ✅ Tambahkan ke Blockchain
     blockchain.create_block(
         validator=sender,
-        data={
-            "action": "Send Document",
-            "sender": sender,
-            "recipient": recipient,
-            "filename": document['filename'],
-            "status": new_status
-        }
+        data={"action": "Send Document", "sender": sender, "recipient": recipient,
+              "filename": document['filename'], "status": new_status}
     )
 
-    flash(f'Document sent successfully to {recipient}.', 'success')
+    flash(f'Document sent to {recipient}.', 'success')
+    return redirect(url_for('dashboard_page'))
+
+from shared import tpas_crypto  # pastikan sudah di-import di atas
+
+
+
+
+from shared import tpas_crypto  # import module baru
+
+@app.route('/create_incomplete_signature/<file_id>', methods=['POST'])
+def create_incomplete_signature(file_id):
+    if 'user' not in session:
+        return redirect(url_for('login_page'))
+
+    username = session['user']
+    if get_user_role(username) != "validator":
+        flash('Only validators can sign.', 'error')
+        return redirect(url_for('dashboard_page'))
+
+    document = documents_collection.find_one({'file_id': ObjectId(file_id)})
+    if not document or document.get('status') != 'Uploaded':
+        flash('Document not valid for pre-signing.', 'error')
+        return redirect(url_for('dashboard_page'))
+
+    # Pastikan user saat ini adalah PENERIMA (file dikirim ke dia)
+    if username not in document.get('shared_with', []):
+        flash('You are not authorized to sign this document.', 'error')
+        return redirect(url_for('dashboard_page'))
+
+    sender_username = document['username']
+    recipient_username = username
+    content = fs.get(ObjectId(file_id)).read()
+
+    signer_sk, signer_pk = tpas_crypto.generate_keypair()
+
+    # Ambil public key pengirim
+    sender_user = users_collection.find_one({'username': sender_username})
+    if not sender_user or 'public_key' not in sender_user:
+        flash('Sender public key not found.', 'error')
+        return redirect(url_for('dashboard_page'))
+
+    adaptor_pk = ecdsa.VerifyingKey.from_string(bytes.fromhex(sender_user['public_key']), curve=ecdsa.SECP256k1)
+    # Generate keypair adaptor (recipient)
+    adaptor_sk, adaptor_pk = tpas_crypto.generate_keypair()
+    adaptor_sig = tpas_crypto.generate_adaptor_signature(
+        message=content,
+        signer_sk=signer_sk,
+        adaptor_pk=adaptor_pk
+    )
+
+    documents_collection.update_one(
+        {'file_id': ObjectId(file_id)},
+        {'$set': {
+            'incomplete_signature': adaptor_sig.hex(),
+            'signer_private_key': signer_sk.to_string().hex(),
+            'signer_public_key': signer_pk.to_string().hex(),
+            'adaptor_private_key': adaptor_sk.to_string().hex(),
+            'adaptor_public_key': adaptor_pk.to_string().hex(),
+            'recipient': recipient_username,
+            'status': 'Incomplete Signature'
+        }}
+    )
+
+    blockchain.create_block(
+        validator=recipient_username,
+        data={
+            "action": "Pre-Sign (TPAS)",
+            "filename": document['filename'],
+            "file_hash": document['file_hash'],
+            "recipient": recipient_username,
+            "incomplete_signature": adaptor_sig.hex(),
+            "status": "Incomplete Signature"
+        },
+        block_type="Pre-Signature"
+    )
+
+    flash('Adaptor signature created.', 'success')
     return redirect(url_for('dashboard_page'))
 
 
-@app.route('/validate_blockchain', methods=['GET'])
-def validate_blockchain():
-    if blockchain.validate_chain():
-        return "Blockchain is valid!", 200
-    else:
-        return "Blockchain is invalid!", 400
 
-
-@app.route('/view_blockchain', methods=['GET'])
-def view_blockchain_ui():
-    blockchain_data = []
-    for block in blockchain.chain:
-        block_copy = block.copy()
-        block_copy['timestamp'] = datetime.fromtimestamp(block['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
-        blockchain_data.append(block_copy)
-        
-    if not blockchain_data:
-        flash('No blocks found in the blockchain.', 'info')
-        
-    return render_template('view_blockchain.html', blockchain=blockchain_data)
-
-@app.route('/download/<file_id>', methods=['GET'])
+@app.route('/download/<file_id>')
 def download_file(file_id):
-    print(f"🔍 Download request received for file_id: {file_id}")  # Debugging
-
     try:
-        # ✅ Ambil dokumen berdasarkan file_id
-        document = documents_collection.find_one({'file_id': ObjectId(file_id)})
+        doc = documents_collection.find_one({'file_id': ObjectId(file_id)})
+        if doc and 'updated_file_id' in doc:
+            file_id = doc['updated_file_id']
 
-        # ✅ Gunakan updated_file_id jika ada
-        if document and 'updated_file_id' in document:
-            file_id = document['updated_file_id']  # Ambil file yang telah diperbarui
-
-        # ✅ Ambil file dari GridFS berdasarkan file_id yang telah diperbarui
         file = fs.get(ObjectId(file_id))
-
         response = app.response_class(file.read(), mimetype="application/pdf")
         response.headers.set('Content-Disposition', f'attachment; filename={file.filename}')
         return response
 
     except Exception as e:
-        print(f"❌ Error: {e}")  # Debugging
-        flash(f'Error while downloading file: {e}', 'error')
+        flash(f'Download failed: {e}', 'error')
         return redirect(url_for('dashboard_page'))
 
+@app.route('/complete_signature/<file_id>', methods=['POST'])
+def complete_signature(file_id):
+    if 'user' not in session:
+        return redirect(url_for('login_page'))
 
-@app.route('/preview/<file_id>', methods=['GET'])
-def preview_file(file_id):
-    print(f"🔍 Preview request received for file_id: {file_id}")  # Debugging
-    try:
-        document = documents_collection.find_one({'file_id': ObjectId(file_id)})
-        
-        if 'updated_file_id' in document:
-            file_id = document['updated_file_id']  # Gunakan file yang telah diperbarui
-        
-        file = fs.get(ObjectId(file_id))
-        mime_type, _ = mimetypes.guess_type(file.filename)
-        mime_type = mime_type or "application/pdf"
-        response = app.response_class(file.read(), mimetype=mime_type)
-        response.headers.set('Content-Disposition', f'inline; filename={file.filename}')
-        return response
-    except Exception as e:
-        print(f"❌ Error: {e}")  # Debugging
-        flash('File not found.', 'error')
+    username = session['user']
+    if get_user_role(username) != "validator":
+        flash('Only validators can complete signature.', 'error')
         return redirect(url_for('dashboard_page'))
+
+    document = documents_collection.find_one({'file_id': ObjectId(file_id)})
+    if not document or 'incomplete_signature' not in document:
+        flash('Document not valid for completion.', 'error')
+        return redirect(url_for('dashboard_page'))
+
+    # 🔐 Ambil data dari database
+    adaptor_sig = bytes.fromhex(document['incomplete_signature'])
+    signer_pk = tpas_crypto.str_to_key(document['signer_public_key'])
+    adaptor_sk = tpas_crypto.str_to_key(document['adaptor_private_key'], is_private=True)
+
+    # 🔍 Ekstrak secret dari adaptor signature
+    secret = tpas_crypto.extract_secret(adaptor_sig, signer_pk, adaptor_sk)
+
+    # 🔒 Hasil Complete Signature (finalisasi)
+    complete_signature = adaptor_sig + secret
+
+    # 🔁 Simpan signature lengkap dan status baru
+    documents_collection.update_one(
+        {'file_id': ObjectId(file_id)},
+        {'$set': {
+            'completed_signature': complete_signature.hex(),
+            'status': 'Complete Signature'
+        }}
+    )
+
+    # 📦 Tambahkan ke Blockchain
+    blockchain.create_block(
+        validator=username,
+        data={
+            "action": "Complete Signature",
+            "filename": document['filename'],
+            "file_hash": document['file_hash'],
+            "status": "Complete Signature",
+            "complete_signature": complete_signature.hex()
+        },
+        block_type="Complete Signature"
+    )
+
+    # 📤 Ambil konten file asli
+    content = fs.get(ObjectId(file_id)).read()
+
+    # 📎 Siapkan data untuk QR Code
+    qr_data = json.dumps({
+        "filename": document['filename'],
+        "file_hash": document['file_hash'],
+        "status": "Complete Signature",
+        "extracted_secret": secret.hex()
+    }, indent=4)
+
+    qr = qrcode.make(qr_data)
+    qr_io = BytesIO()
+    qr.save(qr_io, format='PNG')
+    qr_io.seek(0)
+
+    # 🧩 Tambahkan QR ke PDF halaman pertama
+    pdf_reader = PdfReader(BytesIO(content))
+    pdf_writer = PdfWriter()
+
+    overlay = BytesIO()
+    can = canvas.Canvas(overlay, pagesize=letter)
+    can.drawImage(ImageReader(qr_io), 400, 50, width=150, height=150)
+    can.showPage()
+    can.save()
+    overlay.seek(0)
+
+    overlay_pdf = PdfReader(overlay)
+    for i, page in enumerate(pdf_reader.pages):
+        if i == 0:
+            page.merge_page(overlay_pdf.pages[0])
+        pdf_writer.add_page(page)
+
+    # 💾 Simpan file final ke GridFS
+    final_buffer = BytesIO()
+    pdf_writer.write(final_buffer)
+    final_buffer.seek(0)
+    signed_file_id = fs.put(final_buffer.getvalue(), filename=f"{document['filename']}_signed.pdf")
+
+    # 📌 Update MongoDB
+    documents_collection.update_one(
+        {'file_id': ObjectId(file_id)},
+        {'$set': {
+            'updated_file_id': signed_file_id
+        }}
+    )
+
+    flash('Adaptor signature completed & QR code embedded.', 'success')
+    return redirect(url_for('dashboard_page'))
 
 
 @app.route('/delete/<file_id>', methods=['POST'])
 def delete_file(file_id):
-    print(f"🔍 Delete request received for file_id: {file_id}")  # Debugging
     if 'user' not in session:
         flash('Unauthorized access.', 'error')
         return redirect(url_for('login_page'))
+
+    current_user = session['user']
+
     try:
+        # Ambil dokumen
+        document = documents_collection.find_one({'file_id': ObjectId(file_id)})
+
+        if not document:
+            flash('Document not found.', 'error')
+            return redirect(url_for('dashboard_page'))
+
+        # Hanya pemilik & dokumen belum dikirim yang boleh hapus
+        if document['username'] != current_user or document['status'] != 'Uploaded':
+            flash('You cannot delete this document.', 'error')
+            return redirect(url_for('dashboard_page'))
+
+        # Hapus dari GridFS dan database
         fs.delete(ObjectId(file_id))
         documents_collection.delete_one({'file_id': ObjectId(file_id)})
+
         flash('File deleted successfully.', 'success')
     except Exception as e:
-        print(f"❌ Error: {e}")  # Debugging
-        flash(f'Error while deleting file: {e}', 'error')
+        print(f"❌ Delete Error: {e}")
+        flash(f'Error deleting file: {e}', 'error')
+
     return redirect(url_for('dashboard_page'))
 
 
-
-@app.route('/add_validator', methods=['POST'])
-def add_validator():
-    node_address = request.json.get('node_address')
-    blockchain.add_node(node_address)
-    return jsonify({"message": f"Validator {node_address} added."}), 200
-
-
-@app.route('/sync', methods=['POST'])
-def sync():
-    chain_data = request.json.get('chain')
-    new_chain = [dict(block) for block in chain_data]
-    replaced = blockchain.replace_chain(new_chain)
-    if replaced:
-        return jsonify({"message": "Blockchain replaced with the longest chain."}), 200
-    else:
-        return jsonify({"message": "Current chain is already the longest."}), 200
-
-@app.route('/add_block', methods=['POST'])
-def add_block():
-    """Hanya validator yang bisa menambang blok baru."""
-    data = request.json.get('data')
-    validator = request.json.get('validator')
-
-    if validator not in blockchain.validators:
-        return jsonify({"error": "Validator not authorized"}), 403
-
+@app.route('/preview/<file_id>')
+def preview_file(file_id):
     try:
-        block = blockchain.create_block(validator, data)
-        return jsonify(block), 201
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 403
+        doc = documents_collection.find_one({'file_id': ObjectId(file_id)})
+        if doc and 'updated_file_id' in doc:
+            file_id = doc['updated_file_id']
 
+        file = fs.get(ObjectId(file_id))
+        mime_type, _ = mimetypes.guess_type(file.filename)
+        response = app.response_class(file.read(), mimetype=mime_type or "application/pdf")
+        response.headers.set('Content-Disposition', f'inline; filename={file.filename}')
+        return response
 
-@app.route('/register_validator', methods=['POST'])
-def register_validator():
-    """Menambahkan validator baru ke blockchain dan MongoDB."""
-    node_address = request.json.get('node_address')
-    public_key = request.json.get('public_key')
+    except Exception as e:
+        flash(f'Preview failed: {e}', 'error')
+        return redirect(url_for('dashboard_page'))
+@app.route('/validate_blockchain')
+def validate_blockchain():
+    if blockchain.validate_chain():
+        return "Blockchain is valid.", 200
+    return "Blockchain is invalid!", 400
 
-    if not node_address or not public_key:
-        return jsonify({"error": "Node address and public key are required"}), 400
+@app.route('/view_blockchain')
+def view_blockchain_ui():
+    blocks = []
+    for block in blockchain.chain:
+        block_copy = block.copy()
+        block_copy['timestamp'] = datetime.fromtimestamp(block['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+        blocks.append(block_copy)
 
-    # Cek apakah validator sudah ada di database
-    if users_collection.find_one({"username": node_address, "is_validator": True}):
-        return jsonify({"message": f"Validator {node_address} is already registered."}), 200
+    if not blocks:
+        flash('No blocks found.', 'info')
+    return render_template('view_blockchain.html', blockchain=blocks)
 
-    # Simpan validator ke database
-    users_collection.update_one(
-        {"username": node_address},
-        {"$set": {"is_validator": True}},
-        upsert=True
-    )
-
-    # Tambahkan ke blockchain
-    blockchain.register_validator(node_address, public_key)
-
-    return jsonify({"message": f"Validator {node_address} added successfully."}), 200
-
-
-@app.route('/sync_chain', methods=['GET'])
+@app.route('/sync_chain')
 def sync_chain():
-    """Sinkronisasi blockchain dengan node lain di jaringan."""
     for node in blockchain.nodes:
         try:
             response = requests.get(f'http://{node}/get_chain')
@@ -590,40 +496,48 @@ def sync_chain():
 
     return jsonify({"message": "Blockchain synchronized"}), 200
 
-
-@app.route('/get_chain', methods=['GET'])
+@app.route('/get_chain')
 def get_chain():
-    """Mengambil seluruh blockchain."""
     return jsonify({"chain": blockchain.chain}), 200
-<<<<<<< HEAD
 
-@app.route('/get_validators', methods=['GET'])
+@app.route('/add_validator', methods=['POST'])
+def add_validator():
+    node_address = request.json.get('node_address')
+    blockchain.add_node(node_address)
+    return jsonify({"message": f"Validator {node_address} added."}), 200
+
+@app.route('/register_validator', methods=['POST'])
+def register_validator():
+    node_address = request.json.get('node_address')
+    public_key = request.json.get('public_key')
+
+    if not node_address or not public_key:
+        return jsonify({"error": "Node address and public key are required."}), 400
+
+    if users_collection.find_one({"username": node_address, "role": "validator"}):
+        return jsonify({"message": f"{node_address} already registered."}), 200
+
+    users_collection.update_one(
+        {"username": node_address},
+        {"$set": {"role": "validator"}},
+        upsert=True
+    )
+    blockchain.register_validator(node_address, public_key)
+    return jsonify({"message": f"Validator {node_address} registered."}), 200
+
+@app.route('/get_validators')
 def get_validators():
     return jsonify({"validators": list(blockchain.validators.keys())}), 200
 
-@app.route('/get_validators_from_db', methods=['GET'])
+@app.route('/get_validators_from_db')
 def get_validators_from_db():
-    """Mengambil validator dari MongoDB dan mengupdate blockchain."""
-    validators = users_collection.find({"is_validator": True}, {"username": 1, "_id": 0})
-    validators_list = [v['username'] for v in validators]
-
-    # Pastikan semua validator dari database juga ada di blockchain
-    for validator in validators_list:
-        if validator not in blockchain.validators:
-            blockchain.register_validator(validator, "Public_Key_Placeholder")
+    validators = users_collection.find({"role": "validator"}, {"username": 1})
+    validator_list = [v['username'] for v in validators]
+    for val in validator_list:
+        if val not in blockchain.validators:
+            blockchain.register_validator(val, "Public_Key_Placeholder")
 
     return jsonify({"validators": list(blockchain.validators.keys())}), 200
 
-
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-
-
-
-
-=======
-    
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
->>>>>>> 83260b2 (Update local changes before pulling latest code)

@@ -1,0 +1,326 @@
+[
+    {
+        "index": 1,
+        "timestamp": 1742782837.268594,
+        "data": {
+            "message": "Genesis Block"
+        },
+        "previous_hash": "0",
+        "validator": "Genesis",
+        "hash": "1b2fc10d63d503dea580e05a235374dfbef107cc5f287f7fd0cc73285ed4a48c"
+    },
+    {
+        "index": 2,
+        "timestamp": 1742784131.239887,
+        "data": {
+            "action": "Upload",
+            "filename": "alzubi2021_1.pdf",
+            "file_hash": "ab4bec2d932551314a86af7c305ee0752bfa781d5879d747d59ddc0bfc59a704"
+        },
+        "previous_hash": "1b2fc10d63d503dea580e05a235374dfbef107cc5f287f7fd0cc73285ed4a48c",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "60f6368a8ee6f079a9463bc7c2b98b3f1319a35adc394e463f2a27221c7cfa3c96c2765161025a2d27a21a8c6153553a6c9f935582712054f526fae32476107b",
+        "hash": "0f6ada4ecde3b16e769b1c17668fd689f01e6d460a6778cc2942396ac904b0f1"
+    },
+    {
+        "index": 3,
+        "timestamp": 1742784143.170911,
+        "data": {
+            "action": "Upload",
+            "filename": "tanda_terima_pengembalian_kunci_unit_1626.pdf",
+            "file_hash": "a3c6df2a301dbdf5abd83d40185b824d2b9388234613ca537839a40c176a2e77"
+        },
+        "previous_hash": "0f6ada4ecde3b16e769b1c17668fd689f01e6d460a6778cc2942396ac904b0f1",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "2e1a45acbd23234f9e66fa3d5ab68658f56e685ae7e2ac806523fb568161f50d9571cbcb36d9e5cf0e934214499888a64d426e3e68f46e98580d9719128d4288",
+        "hash": "64ca8176f1773b5276dc88f3681e09e66398c0bc54e11d34e82753d8e2b1e317"
+    },
+    {
+        "index": 4,
+        "timestamp": 1742785455.602982,
+        "data": {
+            "action": "Upload",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210"
+        },
+        "previous_hash": "64ca8176f1773b5276dc88f3681e09e66398c0bc54e11d34e82753d8e2b1e317",
+        "validator": "sanjaya",
+        "block_type": "Upload",
+        "signature": "cbe2e1b64f2620cb6bcedeba2a7e236a77bb85c28852bd2481cbafb2c6f57f1c1a419bf6f6f81033e18a5b3147dc3f36efa265e3826fd8576f159d022c15795d",
+        "hash": "63c65f23ff6655e550f31ce71ef172f6f5f84cae15b8d492b72490e8d157384c"
+    },
+    {
+        "index": 5,
+        "timestamp": 1742785473.0259187,
+        "data": {
+            "action": "Upload",
+            "filename": "995-2147-1-PB_1.pdf",
+            "file_hash": "8488a340f3154d5826ba381e161e9f24a519f78216cac88ff35ea692531a16fc"
+        },
+        "previous_hash": "63c65f23ff6655e550f31ce71ef172f6f5f84cae15b8d492b72490e8d157384c",
+        "validator": "sanjaya",
+        "block_type": "Upload",
+        "signature": "e63b629bc1b91aa8787c4a92f55f64b67a803525d1a9e20038b597476d72271ba8db03a291ec444e07c63026ca6aec64c02f8c1076bafb1618a3566d9cbf7d5c",
+        "hash": "07b9870d0b570bd20ce5f961c2a81b90f3ce1bbc34929a87e3788c182dbaba74"
+    },
+    {
+        "index": 6,
+        "timestamp": 1742785749.6125479,
+        "data": {
+            "action": "Upload",
+            "filename": "alzubi2021_1.pdf",
+            "file_hash": "ab4bec2d932551314a86af7c305ee0752bfa781d5879d747d59ddc0bfc59a704"
+        },
+        "previous_hash": "07b9870d0b570bd20ce5f961c2a81b90f3ce1bbc34929a87e3788c182dbaba74",
+        "validator": "sanjaya",
+        "block_type": "Upload",
+        "signature": "321b666172162d9be6fd094c819b4665a4c246e07fabd70242cffb20fd99fb8c3def57e6d95ef16b2932147e11dbdcf15b76b53c229e84df6685e78c02abd3db",
+        "hash": "44facf21db5e76824de5938fa9b098ecd4f6695b7f4da3336d2c40489ccedb1d"
+    },
+    {
+        "index": 7,
+        "timestamp": 1742785857.5116434,
+        "data": {
+            "action": "Upload",
+            "filename": "alzubi2021_1.pdf",
+            "file_hash": "ab4bec2d932551314a86af7c305ee0752bfa781d5879d747d59ddc0bfc59a704"
+        },
+        "previous_hash": "44facf21db5e76824de5938fa9b098ecd4f6695b7f4da3336d2c40489ccedb1d",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "cf9049d72409a6be7af952cc55b3cc423aa5eb84d562d8af45fd024a436aabf854ce4d49ff36333a120f6dd73e03679c410525d84758d8bd1942e323fc651ce8",
+        "hash": "d74134d0739657afa15ec2899ba0654a15bf0293d64bc07da9bbb2c629a2f269"
+    },
+    {
+        "index": 8,
+        "timestamp": 1742794525.1376047,
+        "data": {
+            "action": "Upload",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210"
+        },
+        "previous_hash": "d74134d0739657afa15ec2899ba0654a15bf0293d64bc07da9bbb2c629a2f269",
+        "validator": "sanjaya",
+        "block_type": "Upload",
+        "signature": "e975ca4f4306505832659b8079b9120664bb211f3c70c6f772f157880d3130697c207ebc5f703d8da9f71a8a718a3ad4e3449fb5aead90cbe5ddc7ed716c4cf9",
+        "hash": "b29b6a5137c858bf4c2adbe8d3e3a50a3cb71eda9aec8d9bb7895f044ac9191c"
+    },
+    {
+        "index": 9,
+        "timestamp": 1742794541.8632724,
+        "data": {
+            "action": "Pre-Sign",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210",
+            "incomplete_signature": "7b54c6075e28de9846bb1e9793b2c45f3582c2c391dd04c5c6ad02d85d4917d7b2878eebf18197a55b812be97d295c84dfde08c00af4eb7e8073f15b10031678",
+            "status": "Incomplete Signature"
+        },
+        "previous_hash": "b29b6a5137c858bf4c2adbe8d3e3a50a3cb71eda9aec8d9bb7895f044ac9191c",
+        "validator": "sanjaya",
+        "block_type": "Pre-Signature",
+        "signature": "e9dc00d4faa2496d306f7e49be7d477ccd2ff877d2cc8f45fe6439842b3c61d2c4f4ab7cfff7160b440deb6367d0062f91371b1370456d098edba4d6ef14d8de",
+        "hash": "88a3b328b523f259c7626c1498572480768e0cdfbb96e6d354a4aca9465e9e27"
+    },
+    {
+        "index": 10,
+        "timestamp": 1742794547.6492257,
+        "data": {
+            "action": "Send Document",
+            "sender": "sanjaya",
+            "recipient": "ilham",
+            "filename": "zhang2019.pdf",
+            "status": "Incomplete Signature"
+        },
+        "previous_hash": "88a3b328b523f259c7626c1498572480768e0cdfbb96e6d354a4aca9465e9e27",
+        "validator": "sanjaya",
+        "block_type": "General",
+        "signature": "a4df911b1740b78c46f58c693534f4f6d6a5213bab41fc5f2607ac8abb48c2711440ad8f16beefb61a0a96c39973ac1ebca7e70c4192477e4e356f769089f9bb",
+        "hash": "c7bc29af8ca768dad3e7f6978ff61caac7ea91f2dbbcf55333f871e83b158757"
+    },
+    {
+        "index": 11,
+        "timestamp": 1742794569.0885644,
+        "data": {
+            "action": "Complete Signature",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210",
+            "signature": "7b54c6075e28de9846bb1e9793b2c45f3582c2c391dd04c5c6ad02d85d4917d7b2878eebf18197a55b812be97d295c84dfde08c00af4eb7e8073f15b10031678-witness-123",
+            "status": "Complete Signature"
+        },
+        "previous_hash": "c7bc29af8ca768dad3e7f6978ff61caac7ea91f2dbbcf55333f871e83b158757",
+        "validator": "ilham",
+        "block_type": "Complete Signature",
+        "signature": "59b9d4caeb8d452ba1e32d8f9d0065b4eb2277bc66ea424fdc784a100e018d4ab983d21eae490448155696b35f271e1a75d3b51c392857ae892a7c68ef6a107f",
+        "hash": "9c1b6eb8e29893c75ad119f66b8d8a38650c4ddf3cb64c0c43cef9387cbf2d3c"
+    },
+    {
+        "index": 12,
+        "timestamp": 1742795008.8899608,
+        "data": {
+            "action": "Upload",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210"
+        },
+        "previous_hash": "9c1b6eb8e29893c75ad119f66b8d8a38650c4ddf3cb64c0c43cef9387cbf2d3c",
+        "validator": "sanjaya",
+        "block_type": "Upload",
+        "signature": "1a7bbb005ec8a61e861c7ce93ec21b7af25b9058bf36d0198de50f49a718691f3e8d2ac8db01384601ec1e18e88f4f93e1f9681e7d920dd2d79bea4d5650caa2",
+        "hash": "a0fe642f6f1ff0f1a7ade488d98d09ee32fa57b704c3831ad09c94132341247c"
+    },
+    {
+        "index": 13,
+        "timestamp": 1742795394.545394,
+        "data": {
+            "action": "Upload",
+            "filename": "1-s2.0-S1110866524000070-main.pdf",
+            "file_hash": "f89251fcaf67593e75a8e42086e699adc4419561ebf4c7fe2237c5fdb83416b8"
+        },
+        "previous_hash": "a0fe642f6f1ff0f1a7ade488d98d09ee32fa57b704c3831ad09c94132341247c",
+        "validator": "sanjaya",
+        "block_type": "Upload",
+        "signature": "223be1f3ce8eb7d994b02d13ad6a0d09de260505c7ef2c9199287cdedaa7ac945986ae59106da428f732e7bbb4317d6360e0aeeee59f2952f6e95a2588c98bf1",
+        "hash": "998110504f661d086800374fcbbf10208c3e0327894ee0fc9ddd4f2519092fc5"
+    },
+    {
+        "index": 14,
+        "timestamp": 1742795407.191558,
+        "data": {
+            "action": "Send Document",
+            "sender": "sanjaya",
+            "recipient": "ilham",
+            "filename": "1-s2.0-S1110866524000070-main.pdf",
+            "status": "Uploaded"
+        },
+        "previous_hash": "998110504f661d086800374fcbbf10208c3e0327894ee0fc9ddd4f2519092fc5",
+        "validator": "sanjaya",
+        "block_type": "General",
+        "signature": "937b46d46a1cada0e55c346ee28c3aa650b3fad0d23948297ffd51a5ac08efc9a26ba6bbab6c90cc9b4c8a131b33f13d0cb5fdb6182d736c12c1552d952e7f45",
+        "hash": "4d230079fd6c6a92cf534b0a22cc3152280585f59832af43232fcc8231552ed4"
+    },
+    {
+        "index": 15,
+        "timestamp": 1742795435.7524364,
+        "data": {
+            "action": "Pre-Sign",
+            "filename": "1-s2.0-S1110866524000070-main.pdf",
+            "file_hash": "f89251fcaf67593e75a8e42086e699adc4419561ebf4c7fe2237c5fdb83416b8",
+            "incomplete_signature": "6fa4cb120cd38b47227924bfc388167c9af10c2fd498cf63966b19504a731010175e7e42ab98cff10511cc66ded24c6138a634cd75624a8cd072eb765c07ce09",
+            "status": "Incomplete Signature"
+        },
+        "previous_hash": "4d230079fd6c6a92cf534b0a22cc3152280585f59832af43232fcc8231552ed4",
+        "validator": "ilham",
+        "block_type": "Pre-Signature",
+        "signature": "8c9d92f6e12875cdb6fdc13ae7fefcfea35f459972d7a2eab2c9db03f8fd2ea6a13cfa3f53f8778feaf5a9370a9ab2af767269081bc59b9e9a863640741d9ace",
+        "hash": "0b23292b3be826947600a1b15e491d41dd3701544453fd7841f2bb6488399070"
+    },
+    {
+        "index": 16,
+        "timestamp": 1742795810.4322703,
+        "data": {
+            "action": "Upload",
+            "filename": "Decentralized_Global_Copyright_System_Based_on_Consortium_Blockchain_With_Proof_of_Authority_1.pdf",
+            "file_hash": "0041b973e35b37c633160fd3f36ef90563045f9dd8079ebae3651c3c6bb06c8d"
+        },
+        "previous_hash": "0b23292b3be826947600a1b15e491d41dd3701544453fd7841f2bb6488399070",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "b379dd8ae29c85e1cee36fa888b5cbb29fd81545a160491448f425e22f11a8c001af4e1817a6dbae84d76fb7afe0ccbf708a37b6678065c7feaf819b66025913",
+        "hash": "526326b836f454a25f5a27263853360ec531cf68632e032de3c07b1b73712d39"
+    },
+    {
+        "index": 17,
+        "timestamp": 1742795817.2819304,
+        "data": {
+            "action": "Send Document",
+            "sender": "ilham",
+            "recipient": "sanjaya",
+            "filename": "Decentralized_Global_Copyright_System_Based_on_Consortium_Blockchain_With_Proof_of_Authority_1.pdf",
+            "status": "Uploaded"
+        },
+        "previous_hash": "526326b836f454a25f5a27263853360ec531cf68632e032de3c07b1b73712d39",
+        "validator": "ilham",
+        "block_type": "General",
+        "signature": "90fdb95012f0faec248a48db4f302e881896df755b97f3028775c5e8a949c5bf77664b0900038ded604654a14ea4dfce3c66618eea8eacddfab4724d2c33a8a8",
+        "hash": "f8f0dcf45347f19b9bf205be211502d450ecf83ec78708154b591194f6b81017"
+    },
+    {
+        "index": 18,
+        "timestamp": 1742795829.7033708,
+        "data": {
+            "action": "Pre-Sign",
+            "filename": "Decentralized_Global_Copyright_System_Based_on_Consortium_Blockchain_With_Proof_of_Authority_1.pdf",
+            "file_hash": "0041b973e35b37c633160fd3f36ef90563045f9dd8079ebae3651c3c6bb06c8d",
+            "incomplete_signature": "51742cb9316b0a2b87672e9df4622f3b053b90ca4b8f9e7b460ebf03bafde8994c5d1e0e72ba86aa82c428ed4b21e91bf8c44ad6ab2d85ba8f0eb82508bfdb76",
+            "status": "Incomplete Signature"
+        },
+        "previous_hash": "f8f0dcf45347f19b9bf205be211502d450ecf83ec78708154b591194f6b81017",
+        "validator": "sanjaya",
+        "block_type": "Pre-Signature",
+        "signature": "b87f48b890a81e2bd1d9a41833abb260342d1405f5093fd0e81b53ccdaa94198137ed134bbf032a7b104394f35d26ef467425c146fed707d8e9e2093d3a0b014",
+        "hash": "3f6bc7463f925a3383c5d2ba0ef9c45aa1845525b6bd84a5e6a921de69251f33"
+    },
+    {
+        "index": 19,
+        "timestamp": 1742795849.7372363,
+        "data": {
+            "action": "Complete Signature",
+            "filename": "Decentralized_Global_Copyright_System_Based_on_Consortium_Blockchain_With_Proof_of_Authority_1.pdf",
+            "file_hash": "0041b973e35b37c633160fd3f36ef90563045f9dd8079ebae3651c3c6bb06c8d",
+            "signature": "51742cb9316b0a2b87672e9df4622f3b053b90ca4b8f9e7b460ebf03bafde8994c5d1e0e72ba86aa82c428ed4b21e91bf8c44ad6ab2d85ba8f0eb82508bfdb76-witness-1234",
+            "status": "Complete Signature"
+        },
+        "previous_hash": "3f6bc7463f925a3383c5d2ba0ef9c45aa1845525b6bd84a5e6a921de69251f33",
+        "validator": "ilham",
+        "block_type": "Complete Signature",
+        "signature": "890d74020bef313d9ec86e3428eabfe1ae26fba8f6f38cc60a6953b1989262ec1b019afd1e6a8c8e09f9d6efa0c865f4c9595a4015ecb61b9aa89647a3252951",
+        "hash": "0c8eae574bf24344783cfbb9bb8503bb419484426e7cce4544f29cc18cfd61b8"
+    },
+    {
+        "index": 20,
+        "timestamp": 1742795983.1998909,
+        "data": {
+            "action": "Upload",
+            "filename": "Decentralized_Global_Copyright_System_Based_on_Consortium_Blockchain_With_Proof_of_Authority_1.pdf",
+            "file_hash": "0041b973e35b37c633160fd3f36ef90563045f9dd8079ebae3651c3c6bb06c8d"
+        },
+        "previous_hash": "0c8eae574bf24344783cfbb9bb8503bb419484426e7cce4544f29cc18cfd61b8",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "f3e0be1eac82ac681b43da5ac829fc43b4e1b1a618786e35b9c2df90b913184a54494f46011a1b1bb1bdc8db085832d038cf4065a93da49ddfecff8497ab7c6d",
+        "hash": "42728877080dfa687a5fd67da7517705dd245d5343a0c25eb1c417cd7f0dfafd"
+    },
+    {
+        "index": 21,
+        "timestamp": 1742795988.4472783,
+        "data": {
+            "action": "Send Document",
+            "sender": "ilham",
+            "recipient": "sanjaya",
+            "filename": "Decentralized_Global_Copyright_System_Based_on_Consortium_Blockchain_With_Proof_of_Authority_1.pdf",
+            "status": "Uploaded"
+        },
+        "previous_hash": "42728877080dfa687a5fd67da7517705dd245d5343a0c25eb1c417cd7f0dfafd",
+        "validator": "ilham",
+        "block_type": "General",
+        "signature": "5aa3b6ec8eadb776084337025750b7f1955cd9836b55599f2b04eb6e2a9d77dd16e6384d8e0b885dbcaffd14e7b373fe730857c90e3864692b7d62908ed007e0",
+        "hash": "297bdcfcc2579d6ff36c1c788474b16a1ae7685b6bf15e37d7b9000272ed236e"
+    },
+    {
+        "index": 22,
+        "timestamp": 1742795998.746926,
+        "data": {
+            "action": "Pre-Sign",
+            "filename": "Decentralized_Global_Copyright_System_Based_on_Consortium_Blockchain_With_Proof_of_Authority_1.pdf",
+            "file_hash": "0041b973e35b37c633160fd3f36ef90563045f9dd8079ebae3651c3c6bb06c8d",
+            "incomplete_signature": "371740d42300b61e0ba5a25011f379888e69bcb66b1af99e63f80b560c9cd9e63290e2e47d34c09f428e1e9b5252774662c269d3e6de0ca5336daa3727fd5235",
+            "status": "Incomplete Signature"
+        },
+        "previous_hash": "297bdcfcc2579d6ff36c1c788474b16a1ae7685b6bf15e37d7b9000272ed236e",
+        "validator": "sanjaya",
+        "block_type": "Pre-Signature",
+        "signature": "3734a7bc743c76a38ede4201bcf6c4d06071c3aa8cf809db762276ef672035dd24e01b026d8cafa2e1222f2e64c89dbdf51bb820168e542f70610b56a318a512",
+        "hash": "33e156290f05a05426f245433057859b2bf8ee4a8daee4dbc2c34612667cae05"
+    }
+]
