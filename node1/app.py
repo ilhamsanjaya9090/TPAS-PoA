@@ -19,6 +19,7 @@ from io import BytesIO
 import json
 import sys
 import requests
+import uuid
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -29,7 +30,7 @@ app = Flask(__name__, template_folder='templates')
 app.secret_key = 'your_secret_key'
 
 # MongoDB config
-MONGO_URL = "mongodb://localhost:27017/"
+MONGO_URL = "mongodb://192.168.1.2:27017/"
 client = MongoClient(MONGO_URL)
 db = client['blockchain_db']
 users_collection = db['users']
@@ -39,6 +40,11 @@ fs = gridfs.GridFS(db)
 blockchain = Blockchain()
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def get_mac_address():
+    mac = ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff)
+                   for ele in range(0, 8*6, 8)][::-1])
+    return mac
 
 def get_user_role(username):
     user = users_collection.find_one({'username': username})
@@ -57,10 +63,11 @@ def register_page():
         username = request.form.get('username')
         password = request.form.get('password')
         confirm = request.form.get('confirm_password')
-        role = request.form.get('role', 'non-validator')  # default jika tidak dipilih
+        role = request.form.get('role', 'non-validator')
+        mac_address = request.form.get('mac_address')  # ⬅️ Tambahan
 
-        if not username or not password:
-            flash('Username and password are required.', 'error')
+        if not username or not password or not mac_address:
+            flash('Username, password, and MAC address are required.', 'error')
             return redirect(url_for('register_page'))
 
         if password != confirm:
@@ -73,10 +80,12 @@ def register_page():
 
         hashed_password = generate_password_hash(password)
         private_key, public_key = tpas_crypto.generate_keypair()
+
         users_collection.insert_one({
-             "username": username,
+            "username": username,
             "password": hashed_password,
             "role": role,
+            "mac_address": mac_address.upper().replace("-", ":"),  # ⬅️ Tambahan
             "private_key": private_key.to_string().hex(),
             "public_key": public_key.to_string().hex()
         })
@@ -91,17 +100,34 @@ def login_page():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = users_collection.find_one({"username": username})
 
-        if not user or not check_password_hash(user['password'], password):
-            flash('Invalid username or password.', 'error')
+        user = users_collection.find_one({'username': username})
+        if not user:
+            flash('User not found.', 'error')
             return redirect(url_for('login_page'))
 
-        session['user'] = username
+        if not check_password_hash(user['password'], password):
+            flash('Incorrect password.', 'error')
+            return redirect(url_for('login_page'))
+
+        # Ambil MAC address node saat ini
+        current_mac = ':'.join(['{:02X}'.format((uuid.getnode() >> ele) & 0xff)
+                                for ele in range(0, 8 * 6, 8)][::-1])
+
+        # Validasi MAC address dengan user
+        if 'mac_address' in user and user['mac_address'].lower() != current_mac.lower():
+            flash(f"Access denied: This user can only login from registered node (MAC: {user['mac_address']}).", 'error')
+            return redirect(url_for('login_page'))
+
+        # Simpan session
+        session['username'] = user['username']
+        session['role'] = user.get('role', 'non-validator')
+
         flash('Login successful.', 'success')
         return redirect(url_for('dashboard_page'))
 
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
@@ -538,6 +564,31 @@ def get_validators_from_db():
             blockchain.register_validator(val, "Public_Key_Placeholder")
 
     return jsonify({"validators": list(blockchain.validators.keys())}), 200
+
+@app.route('/receive_block', methods=['POST'])
+def receive_block():
+    data = request.get_json()
+    received_block = data.get('block')
+
+    if not received_block:
+        return jsonify({'message': 'Block data not found'}), 400
+
+    last_block = blockchain.get_previous_block()
+    if received_block['previous_hash'] != last_block['hash']:
+        return jsonify({'message': 'Invalid previous hash'}), 400
+
+    # Cek apakah block sudah ada di chain
+    for block in blockchain.chain:
+        if block['hash'] == received_block['hash']:
+            return jsonify({'message': 'Block already exists'}), 200
+
+    blockchain.chain.append(received_block)
+    blockchain.save_chain()
+
+    print(f"✅ Block #{received_block['index']} diterima dari peer.")
+    return jsonify({'message': 'Block received successfully'}), 200
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

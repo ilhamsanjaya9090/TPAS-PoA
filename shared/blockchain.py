@@ -41,13 +41,15 @@ class Blockchain:
     def add_node(self, address):
         self.nodes.add(address)
         print(f"✅ Node added: {address}")
-
+    
     def create_block(self, validator, data=None, previous_hash=None, block_type="General"):
+        # Validasi bahwa hanya validator yang sah yang boleh membuat blok
         if validator not in self.validators:
-            raise ValueError("⛔ Validator tidak sah")
+            raise ValueError("❌ Validator tidak sah")
 
         previous_hash = previous_hash or self.get_previous_block()["hash"]
 
+        # Cegah duplikasi blok berdasarkan data dan previous_hash
         for block in self.chain:
             if block["data"] == data and block["previous_hash"] == previous_hash:
                 print("⚠️ Block already exists, skipping creation.")
@@ -59,14 +61,46 @@ class Blockchain:
             "data": data or {},
             "previous_hash": previous_hash,
             "validator": validator,
-            "block_type": block_type
+            "block_type": block_type,
         }
+
+        # Tanda tangan digital oleh validator
         block["signature"] = self.sign_block(block, validator)
+
+        # Hitung hash blok
         block["hash"] = self.calculate_hash(block)
+
+        # Tambahkan ke rantai dan simpan
         self.chain.append(block)
         self.save_chain()
+
+        # Broadcast ke node lain (peer-to-peer)
+        try:
+            from shared.config import PEER_NODES, MY_NODE_URL
+            import requests
+
+            for node in PEER_NODES:
+                if node != MY_NODE_URL:
+                    response = requests.post(f"{node}/receive_block", json={"block": block})
+                    print(f"📡 Broadcast to {node}: {response.status_code}")
+        except Exception as e:
+            print(f"⚠️ Gagal broadcast block ke peer: {e}")
+
         print(f"✅ Block #{block['index']} created by {validator} - Type: {block_type}")
         return block
+
+        # Di bawah class Blockchain:
+    def broadcast_block_to_peers(block):
+        from shared.config import PEER_NODES, MY_NODE_URL
+        import requests
+
+        for node_url in PEER_NODES:
+            try:
+                if node_url != MY_NODE_URL:  # Hindari broadcast ke diri sendiri
+                    requests.post(f"{node_url}/receive_block", json={"block": block})
+            except Exception as e:
+                print(f"Gagal kirim block ke {node_url}: {e}")
+
 
     def get_previous_block(self):
         return self.chain[-1] if self.chain else None
