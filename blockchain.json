@@ -322,5 +322,103 @@
         "block_type": "Pre-Signature",
         "signature": "3734a7bc743c76a38ede4201bcf6c4d06071c3aa8cf809db762276ef672035dd24e01b026d8cafa2e1222f2e64c89dbdf51bb820168e542f70610b56a318a512",
         "hash": "33e156290f05a05426f245433057859b2bf8ee4a8daee4dbc2c34612667cae05"
+    },
+    {
+        "index": 23,
+        "timestamp": 1742958228.1467266,
+        "data": {
+            "action": "Upload",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210"
+        },
+        "previous_hash": "33e156290f05a05426f245433057859b2bf8ee4a8daee4dbc2c34612667cae05",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "5811e54efbe1b2dc8a8c9da88556bd0a4deb4db241be6dbcb4afb0028b3ecbcad8f679f7fe70d2ca49a704f232fe5b93f515c96caa576dbd0dd8e7541ffa12de",
+        "hash": "98b48a8c7a2c0eae3d2520218b553ccad3ab7801c8e39bb8e29ef18ac2af812c"
+    },
+    {
+        "index": 24,
+        "timestamp": 1742958230.0485039,
+        "data": {
+            "action": "Upload",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210"
+        },
+        "previous_hash": "98b48a8c7a2c0eae3d2520218b553ccad3ab7801c8e39bb8e29ef18ac2af812c",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "0dcad051cb71cc90b519d407e873afe6eb38a5761828be711deebedfa06dfeb7efaea76e8c665e44cc4f1a0d25abf542e0e49e753f0e6c66f66bbaad67070ce2",
+        "hash": "bc861916cd30ac32b61236d4ef84a92aae7c011472d39984fa2e07d32f9010c4"
+    },
+    {
+        "index": 25,
+        "timestamp": 1742958252.6164467,
+        "data": {
+            "action": "Upload",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210"
+        },
+        "previous_hash": "bc861916cd30ac32b61236d4ef84a92aae7c011472d39984fa2e07d32f9010c4",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "78f2e2f9e1bd5140315dbecb7fea9ba12fab17f3c47cad737afe280cbd786a0f2d09f6a9d1de148bd550c5d5bd174e32d6da777587c812a6c134363e3798567a",
+        "hash": "306aaed6a4bf3e74ec8509546e31af4e847b0921a37c8fb7df5ce6b437576680"
+    },
+    {
+        "index": 26,
+        "timestamp": 1742958282.2168176,
+        "data": {
+            "action": "Upload",
+            "filename": "alzubi2021_1.pdf",
+            "file_hash": "ab4bec2d932551314a86af7c305ee0752bfa781d5879d747d59ddc0bfc59a704"
+        },
+        "previous_hash": "306aaed6a4bf3e74ec8509546e31af4e847b0921a37c8fb7df5ce6b437576680",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "91e40774398324eb03392d7a7c5beb9b61c4a62c9ed4208a831fb0c7c8a58dcd6c51fbe16b8f3586a6e34a3ba5ae9c32b1d3a5b7911eeb78e2f01aabc0c13f1c",
+        "hash": "be9f0e7beaf0e2b2abc78711c7c4edfc64bca7b72f668b2cda9a9190842c6578"
+    },
+    {
+        "index": 27,
+        "timestamp": 1742958322.8902297,
+        "data": {
+            "action": "Upload",
+            "filename": "Decentralized_Global_Copyright_System_Based_on_Consortium_Blockchain_With_Proof_of_Authority_1.pdf",
+            "file_hash": "0041b973e35b37c633160fd3f36ef90563045f9dd8079ebae3651c3c6bb06c8d"
+        },
+        "previous_hash": "be9f0e7beaf0e2b2abc78711c7c4edfc64bca7b72f668b2cda9a9190842c6578",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "ecd04c9d793ce0921fdc2d0fcdca35a1f6fe6b301637defb4a6952807cefd60ac1721c5772d1a1594d292ba9f0e69345d171f86c332813e3e4511b659c01ff19",
+        "hash": "7b7a57b01f9c006aee975001ce237c01b9a82b18925dfd12e08fe5d576b135cf"
+    },
+    {
+        "index": 28,
+        "timestamp": 1742958742.9926486,
+        "data": {
+            "action": "Upload",
+            "filename": "zhang2019.pdf",
+            "file_hash": "87f5018144a9c0fcc4b88a9f49052b9342098bee2a3ff3e58053d4199b4bb210"
+        },
+        "previous_hash": "7b7a57b01f9c006aee975001ce237c01b9a82b18925dfd12e08fe5d576b135cf",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "1a1657b7985836b8d7296a54022dd8dbb811e142dae9708c2aac400296adaa3450323a69d0e6e122f2e6e4a74694b3e3e8bd18e7b02096605339ed9528f5127b",
+        "hash": "466a2c6bcfad55825a09bd069eb6be03f14018d99b2b8cb11ba6fceeea8bbd83"
+    },
+    {
+        "index": 29,
+        "timestamp": 1742959110.823588,
+        "data": {
+            "action": "Upload",
+            "filename": "fang2020.pdf",
+            "file_hash": "e2fdebe0341772637a39881adba521e24c7937dd5853046e637dec892af6c31c"
+        },
+        "previous_hash": "466a2c6bcfad55825a09bd069eb6be03f14018d99b2b8cb11ba6fceeea8bbd83",
+        "validator": "ilham",
+        "block_type": "Upload",
+        "signature": "70dd0eaaad5d5445c725ffadd22e72685925dbda7d36c137890d7e158e7595e07c9314a87cf925269fade85e47f766b8ef4c69e49050fad9f8f06b6c1b3d17b8",
+        "hash": "b5dffd3b54c4ef16672e657356e443f1e3c09aee8e209403ebf3c49735858a3b"
     }
 ]

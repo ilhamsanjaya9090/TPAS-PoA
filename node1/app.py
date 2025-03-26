@@ -20,6 +20,10 @@ import json
 import sys
 import requests
 import uuid
+from getmac import get_mac_address
+
+import psutil
+import re
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -41,10 +45,23 @@ blockchain = Blockchain()
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
+
 def get_mac_address():
-    mac = ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff)
-                   for ele in range(0, 8*6, 8)][::-1])
-    return mac
+    """
+    Ambil MAC address dari interface fisik yang aktif (hindari adapter virtual seperti 'VMware', 'Loopback', 'Virtual').
+    """
+    for interface, addrs in psutil.net_if_addrs().items():
+        if re.search(r"vmware|virtual|loopback|bluetooth", interface, re.IGNORECASE):
+            continue  # lewati interface virtual
+
+        for addr in addrs:
+            if addr.family == psutil.AF_LINK:
+                mac = addr.address.upper()
+                if re.match(r"^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$", mac, re.IGNORECASE):
+                    return mac
+    raise ValueError("Tidak ditemukan MAC address dari interface aktif.")
+
 
 def get_user_role(username):
     user = users_collection.find_one({'username': username})
@@ -57,6 +74,8 @@ def load_validators_from_db():
 
 load_validators_from_db()
 
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
     if request.method == 'POST':
@@ -64,30 +83,28 @@ def register_page():
         password = request.form.get('password')
         confirm = request.form.get('confirm_password')
         role = request.form.get('role', 'non-validator')
-        mac_address = request.form.get('mac_address')  # ⬅️ Tambahan
+        mac_address = get_mac_address()
 
-        if not username or not password or not mac_address:
-            flash('Username, password, and MAC address are required.', 'error')
+        if not username or not password or not confirm:
+            flash('All fields are required.', 'error')
             return redirect(url_for('register_page'))
 
         if password != confirm:
             flash('Passwords do not match.', 'error')
             return redirect(url_for('register_page'))
 
-        if users_collection.find_one({"username": username}):
+        existing_user = users_collection.find_one({'username': username})
+        if existing_user:
             flash('Username already exists.', 'error')
             return redirect(url_for('register_page'))
 
-        hashed_password = generate_password_hash(password)
-        private_key, public_key = tpas_crypto.generate_keypair()
+        hashed_pw = generate_password_hash(password)
 
         users_collection.insert_one({
-            "username": username,
-            "password": hashed_password,
-            "role": role,
-            "mac_address": mac_address.upper().replace("-", ":"),  # ⬅️ Tambahan
-            "private_key": private_key.to_string().hex(),
-            "public_key": public_key.to_string().hex()
+            'username': username,
+            'password': hashed_pw,
+            'role': role,
+            'mac_address': mac_address
         })
 
         flash('Registration successful. Please login.', 'success')
@@ -100,34 +117,27 @@ def login_page():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        mac_address = get_mac_address()
 
         user = users_collection.find_one({'username': username})
+
         if not user:
-            flash('User not found.', 'error')
+            flash('Username not found.', 'error')
             return redirect(url_for('login_page'))
 
         if not check_password_hash(user['password'], password):
             flash('Incorrect password.', 'error')
             return redirect(url_for('login_page'))
 
-        # Ambil MAC address node saat ini
-        current_mac = ':'.join(['{:02X}'.format((uuid.getnode() >> ele) & 0xff)
-                                for ele in range(0, 8 * 6, 8)][::-1])
-
-        # Validasi MAC address dengan user
-        if 'mac_address' in user and user['mac_address'].lower() != current_mac.lower():
-            flash(f"Access denied: This user can only login from registered node (MAC: {user['mac_address']}).", 'error')
+        if user.get('mac_address') != mac_address:
+            flash('Unauthorized device.', 'error')
             return redirect(url_for('login_page'))
 
-        # Simpan session
         session['username'] = user['username']
-        session['role'] = user.get('role', 'non-validator')
-
         flash('Login successful.', 'success')
         return redirect(url_for('dashboard_page'))
 
     return render_template('login.html')
-
 
 @app.route('/logout')
 def logout():

@@ -75,19 +75,26 @@ class Blockchain:
         self.save_chain()
 
         # Broadcast ke node lain (peer-to-peer)
+        # Broadcast ke node lain (peer-to-peer)
         try:
             from shared.config import PEER_NODES, MY_NODE_URL
             import requests
 
             for node in PEER_NODES:
                 if node != MY_NODE_URL:
-                    response = requests.post(f"{node}/receive_block", json={"block": block})
-                    print(f"📡 Broadcast to {node}: {response.status_code}")
+                    try:
+                        response = requests.post(
+                            f"{node}/receive_block", 
+                            json={"block": block}, 
+                            timeout=3  # Tambahkan timeout
+                        )
+                        print(f"📡 Broadcast to {node}: {response.status_code}")
+                    except Exception as e:
+                        print(f"⚠️ Gagal broadcast ke {node}: {e}")
+
         except Exception as e:
             print(f"⚠️ Gagal broadcast block ke peer: {e}")
 
-        print(f"✅ Block #{block['index']} created by {validator} - Type: {block_type}")
-        return block
 
         # Di bawah class Blockchain:
     def broadcast_block_to_peers(block):

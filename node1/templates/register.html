@@ -25,42 +25,32 @@
                         {% endif %}
                         {% endwith %}
 
-                        <form method="POST" action="{{ url_for('register_page') }}">
-                            <div class="mb-3">
-                                <label class="form-label">Username</label>
-                                <input type="text" name="username" class="form-control" required>
+                        <form method="POST" action="/register">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" name="username" required>
+                        
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        
+                            <label for="confirm_password">Confirm Password</label>
+                            <input type="password" class="form-control" name="confirm_password" required>
+                        
+                            <label for="role">Role</label>
+                            <select class="form-control" name="role">
+                                <option value="non-validator">Non-Validator</option>
+                                <option value="validator">Validator</option>
+                            </select>
+                        
+                            <!-- MAC Address Hidden -->
+                            <input type="hidden" id="mac_address" name="mac_address">
+                        
+                            <br>
+                            <button type="submit" class="btn btn-primary btn-block">Register</button>
+                        
+                            <div class="text-center mt-2">
+                                Sudah punya akun? <a href="{{ url_for('login_page') }}">Login di sini</a>
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Confirm Password</label>
-                                <input type="password" name="confirm_password" class="form-control" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Role</label>
-                                <select name="role" class="form-select">
-                                    <option value="validator">Validator</option>
-                                    <option value="non-validator" selected>Non-Validator</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">MAC Address (Node ini)</label>
-                                <input type="text" name="mac_address" class="form-control" placeholder="Contoh: 34-6F-24-E2-0B-F1" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100">Register</button>
-                        </form>
-
-                        <p class="mt-3 text-center">
-                            Sudah punya akun? <a href="{{ url_for('login_page') }}">Login di sini</a>
-                        </p>
-                    </div>
+                        </form>                        
                 </div>
             </div>
         </div>
