@@ -21,7 +21,10 @@ import sys
 import requests
 import uuid
 from getmac import get_mac_address
-
+from shared.tpas_crypto import generate_keypair
+import threading
+import time
+import bson
 import psutil
 import re
 
@@ -29,6 +32,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from shared import tpas_crypto
 from shared.blockchain import Blockchain
+from shared.config import PEER_NODES, MY_NODE_URL
+
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = 'your_secret_key'
@@ -40,6 +45,8 @@ db = client['blockchain_db']
 users_collection = db['users']
 documents_collection = db['documents']
 fs = gridfs.GridFS(db)
+
+blocks_collection = db['blocks']
 
 blockchain = Blockchain()
 UPLOAD_FOLDER = 'uploads'
@@ -68,18 +75,49 @@ def get_user_role(username):
     return user.get("role", "non-validator") if user else "non-validator"
 
 def load_validators_from_db():
-    validators = users_collection.find({"role": "validator"}, {"username": 1})
+    validators = users_collection.find({"role": "validator"}, {"username": 1, "public_key": 1})
     for v in validators:
-        blockchain.register_validator(v['username'], "Public_Key_Placeholder")
+        if 'public_key' in v:
+            blockchain.register_validator(v['username'], v['public_key'])
+
 
 load_validators_from_db()
 
 
+def sync_with_peer():
+    while True:
+        try:
+            for node in PEER_NODES:
+                if node != MY_NODE_URL:
+                    response = requests.get(f"{node}/get_blocks")
+                    peer_chain = response.json()
+
+                    if blockchain.replace_chain(peer_chain):
+                        blockchain.chain = peer_chain
+                        blockchain.save_chain()  # opsional
+                        print(f"🔄 Synced chain from {node}")
+        except Exception as e:
+            print(f"⚠️ Sync error: {e}")
+        time.sleep(10)  # Sync setiap 10 detik
+
+# Jalankan thread di background
+sync_thread = threading.Thread(target=sync_with_peer, daemon=True)
+sync_thread.start()
+
+def serialize_block(block):
+    if isinstance(block, dict):
+        return {k: serialize_block(v) for k, v in block.items()}
+    elif isinstance(block, list):
+        return [serialize_block(i) for i in block]
+    elif isinstance(block, bson.ObjectId):
+        return str(block)
+    else:
+        return block
 
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
     if request.method == 'POST':
-        username = request.form.get('username')
+        username = request.form.get('username') 
         password = request.form.get('password')
         confirm = request.form.get('confirm_password')
         role = request.form.get('role', 'non-validator')
@@ -98,19 +136,27 @@ def register_page():
             flash('Username already exists.', 'error')
             return redirect(url_for('register_page'))
 
+        # Hash password
         hashed_pw = generate_password_hash(password)
 
+        # Generate Key Pair
+        private_key, public_key = generate_keypair()
+
+        # Simpan ke database
         users_collection.insert_one({
             'username': username,
             'password': hashed_pw,
             'role': role,
-            'mac_address': mac_address
+            'mac_address': mac_address,
+            'private_key': private_key.to_string().hex(),
+            'public_key': public_key.to_string().hex()
         })
 
         flash('Registration successful. Please login.', 'success')
         return redirect(url_for('login_page'))
 
     return render_template('register.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
@@ -127,14 +173,19 @@ def login_page():
 
         if not check_password_hash(user['password'], password):
             flash('Incorrect password.', 'error')
-            return redirect(url_for('login_page'))
+            return redirect(url_for('login_page'))       
 
+        
         if user.get('mac_address') != mac_address:
             flash('Unauthorized device.', 'error')
             return redirect(url_for('login_page'))
 
-        session['username'] = user['username']
+        session['user'] = user['username']
         flash('Login successful.', 'success')
+
+        # ✅ Jika role validator, daftar ke blockchain jika belum
+        if user.get("role") == "validator" and user['username'] not in blockchain.validators:
+            blockchain.register_validator(user['username'], user['public_key'])
         return redirect(url_for('dashboard_page'))
 
     return render_template('login.html')
@@ -597,6 +648,10 @@ def receive_block():
 
     print(f"✅ Block #{received_block['index']} diterima dari peer.")
     return jsonify({'message': 'Block received successfully'}), 200
+
+@app.route('/get_blocks', methods=['GET'])
+def get_blocks():
+    return jsonify(blockchain.chain), 200
 
 
 
