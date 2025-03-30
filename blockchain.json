@@ -1,26 +1,46 @@
 [
     {
-        "index": 1,
-        "timestamp": 1743041163.7801416,
-        "data": {
-            "message": "Genesis Block"
-        },
-        "previous_hash": "0",
-        "validator": "Genesis",
-        "hash": "07530f900ff695e561eaf19c9529126c3294ca87e2ea15bd86b9e7635516fc8e"
-    },
-    {
-        "index": 2,
-        "timestamp": 1743041189.5758371,
+        "block_type": "Upload",
         "data": {
             "action": "Upload",
-            "filename": "alzubi2021_1.pdf",
-            "file_hash": "ab4bec2d932551314a86af7c305ee0752bfa781d5879d747d59ddc0bfc59a704"
+            "file_hash": "ab4bec2d932551314a86af7c305ee0752bfa781d5879d747d59ddc0bfc59a704",
+            "filename": "alzubi2021_1.pdf"
         },
+        "hash": "c0b970a423fa23ff083ae1b1033a976a010494d23e3d94e21b11ed42d0a36b3d",
+        "index": 2,
         "previous_hash": "07530f900ff695e561eaf19c9529126c3294ca87e2ea15bd86b9e7635516fc8e",
-        "validator": "ilham",
-        "block_type": "Upload",
         "signature": "f927b3f4970bd22d9fc3baea9d5aab4110a2976dd5fef66b543bd557b80b40fc7d6e84bcc177204f1e08e4830c5a507a0d4fd53f168be8b4455e9da3b5f65ff4",
-        "hash": "c0b970a423fa23ff083ae1b1033a976a010494d23e3d94e21b11ed42d0a36b3d"
+        "timestamp": 1743041189.5758371,
+        "validator": "ilham"
+    },
+    {
+        "block_type": "Upload",
+        "data": {
+            "action": "Upload",
+            "file_hash": "45371423752de6c8d0295c7984fe776978cd9c1e35dd0fabcaec7b0aeb307cfe",
+            "filename": "RU0803-Sb_439_Ilham_Sanjaya.pdf"
+        },
+        "hash": "4fe5361ab7fcae81a2fa74364a1ae23baa54bf4fa1c216e923482fc2368ba9a6",
+        "index": 3,
+        "previous_hash": "c0b970a423fa23ff083ae1b1033a976a010494d23e3d94e21b11ed42d0a36b3d",
+        "signature": "3e479fa879e23bad1ad411d3f034683ff85984f471563607b94f4fb60ba8d71bb70053464b21dddb3187a70b847c36592de47b276d96345db924021f4684c4a9",
+        "timestamp": 1743181965.2994533,
+        "validator": "ilham"
+    },
+    {
+        "block_type": "General",
+        "data": {
+            "action": "Send Document",
+            "filename": "RU0803-Sb_439_Ilham_Sanjaya.pdf",
+            "recipient": "sanjaya",
+            "sender": "ilham",
+            "status": "Uploaded"
+        },
+        "hash": "3206efb4c7255bbabb346b2109731e13dab742e040f127bbaf7891a91256c7c2",
+        "index": 3,
+        "previous_hash": "4fe5361ab7fcae81a2fa74364a1ae23baa54bf4fa1c216e923482fc2368ba9a6",
+        "signature": "f3d19c32b8371e667a41d96a6ca7df411732f4e7ed0331b1c80327c4082e3d90c72184f5ba0265326ecdae7bbba02849164502474b11bea2241f190a556aa555",
+        "timestamp": 1743182262.929097,
+        "validator": "ilham"
     }
 ]

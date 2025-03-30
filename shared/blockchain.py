@@ -90,7 +90,7 @@ class Blockchain:
         # Broadcast ke node lain (peer-to-peer)
         # Broadcast ke node lain (peer-to-peer)
         try:
-            from shared.config import PEER_NODES, MY_NODE_URL
+            
             import requests
 
             for node in PEER_NODES:
@@ -107,22 +107,6 @@ class Blockchain:
 
         except Exception as e:
             print(f"⚠️ Gagal broadcast block ke peer: {e}")
-
-    def broadcast_block_to_peers(self, block):
-        serialized_block = serialize_block(block)
-
-        for node_url in PEER_NODES:
-            try:
-                if node_url != MY_NODE_URL:  # Hindari broadcast ke diri sendiri
-                    response = requests.post(
-                        f"{node_url}/receive_block",
-                        json={"block": serialized_block},
-                        timeout=5
-                    )
-                    print(f"✅ Block dikirim ke {node_url}, status: {response.status_code}")
-            except Exception as e:
-                print(f"⚠️ Gagal kirim block ke {node_url}: {e}")
-
 
     def get_previous_block(self):
         return self.chain[-1] if self.chain else None
@@ -186,15 +170,10 @@ class Blockchain:
             self.save_chain()
             print("✅ Local chain replaced with longer chain.")
             return True
+        else:
             print("⚠️ Received chain is not longer. No replacement made.")
-            return True
-        return False
-    
-
-    def save_chain(self, filename="blockchain.json"):
-        with open(filename, 'w') as f:
-            json.dump(self.chain, f, indent=4)
-        print("💾 Blockchain saved to file.")
+            return False
+           
 
     def load_chain(self, filename="blockchain.json"):
         if os.path.exists(filename):
@@ -211,3 +190,7 @@ class Blockchain:
                 print("🔁 Blockchain loaded from MongoDB.")
             except Exception as e:
                print(f"❌ Failed to load blockchain from MongoDB: {e}")
+
+    def save_chain(self):
+        with open("blockchain.json", "w") as f:
+            json.dump([serialize_block(block) for block in self.chain], f, indent=4)

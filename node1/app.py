@@ -32,14 +32,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from shared import tpas_crypto
 from shared.blockchain import Blockchain
-from shared.config import PEER_NODES, MY_NODE_URL
+from shared.config import PEER_NODES, MY_NODE_URL, MONGO_URL
+
 
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = 'your_secret_key'
 
 # MongoDB config
-MONGO_URL = "mongodb://192.168.1.2:27017/"
 client = MongoClient(MONGO_URL)
 db = client['blockchain_db']
 users_collection = db['users']
@@ -651,7 +651,8 @@ def receive_block():
 
 @app.route('/get_blocks', methods=['GET'])
 def get_blocks():
-    return jsonify(blockchain.chain), 200
+    serialized_chain = [serialize_block(block) for block in blockchain.chain]
+    return jsonify(serialized_chain), 200
 
 
 
