@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard | Blockchain TPAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📄 Dashboard - {{ user }} ({{ role|capitalize }})</h2>
+        <div>
+            {% if role == 'validator' %}
+            <a href="{{ url_for('upload') }}" class="btn btn-primary me-2">
+                <i class="bi bi-cloud-upload"></i> Upload
+            </a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            Your Documents
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Filename</th>
+                        <th>Status</th>
+                        <th>Shared With</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.filename }}</td>
+                        <td><span class="badge bg-info">{{ doc.status }}</span></td>
+                        <td>
+                            {% if doc.shared_with %}
+                                {{ doc.shared_with | join(', ') }}
+                            {% else %}
+                                <em>Private</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc.file_id %}
+                                <a href="{{ url_for('download_file', file_id=doc.file_id) }}" class="btn btn-success btn-sm mb-1">
+                                    <i class="bi bi-download"></i> Download
+                                </a>
+                                <a href="{{ url_for('preview_file', file_id=doc.file_id) }}" class="btn btn-outline-info btn-sm mb-1">
+                                    <i class="bi bi-eye"></i> Preview
+                                </a>
+                            {% endif %}
+
+                            <!-- 🖊️ Incomplete Signature (Sign) oleh penerima -->
+                            {% if role == 'validator' and doc.status == 'Uploaded' and user in (doc.shared_with or []) %}
+                                <form action="{{ url_for('create_incomplete_signature', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                    <button class="btn btn-warning btn-sm mb-1">
+                                        <i class="bi bi-pencil"></i> Sign
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <!-- ✅ Complete Signature oleh uploader -->
+                            <!-- Complete Signature -->
+                            {% if role == 'validator' and doc.status == 'Incomplete Signature' and user == doc.username %}
+                            <form action="{{ url_for('complete_signature', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                <button class="btn btn-secondary btn-sm mb-1">
+                                    <i class="bi bi-check2-circle"></i> Complete
+                                </button>
+                            </form>
+                            {% endif %}
+
+
+                            <!-- 🗑️ Delete hanya jika belum dikirim -->
+                            {% if doc.status == 'Uploaded' and user == doc.username %}
+                                <form action="{{ url_for('delete_file', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                    <button class="btn btn-danger btn-sm mb-1">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <!-- 📤 Send dokumen -->
+                            {% if role == 'validator' and user == doc.username and doc.status in ['Uploaded', 'Incomplete Signature', 'Complete Signature'] %}
+                                <form action="{{ url_for('send_document', file_id=doc.file_id) }}" method="POST" class="d-inline">
+                                    <select name="recipient" class="form-select form-select-sm mb-1" required>
+                                        <option value="" disabled selected>Select user</option>
+                                        {% for u in user_list %}
+                                            <option value="{{ u }}">{{ u }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-primary btn-sm mb-1">
+                                        <i class="bi bi-send"></i> Send
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No documents available.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('view_blockchain_ui') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-diagram-3"></i> View Blockchain
+        </a>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
